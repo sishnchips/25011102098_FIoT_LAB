@@ -1,0 +1,63 @@
+[
+  {
+    "id": "lab13",
+    "type": "tab",
+    "label": "BME280 MQTT analytics"
+  },
+  {
+    "id": "broker",
+    "type": "mqtt-broker",
+    "name": "Lab broker",
+    "broker": "broker.emqx.io",
+    "port": "1883",
+    "clientid": "25011102098_analytics",
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true
+  },
+  {
+    "id": "mqtt",
+    "type": "mqtt in",
+    "z": "lab13",
+    "name": "Live BME280 JSON",
+    "topic": "stm32/data",
+    "qos": "0",
+    "datatype": "auto",
+    "broker": "broker",
+    "x": 160,
+    "y": 100,
+    "wires": [
+      [
+        "stats"
+      ]
+    ]
+  },
+  {
+    "id": "stats",
+    "type": "function",
+    "z": "lab13",
+    "name": "Sensor statistics",
+    "func": "let v = typeof msg.payload === \"string\" ? JSON.parse(msg.payload) : msg.payload;\nif (v.status !== \"success\") return null;\nlet s = context.get(\"statistics\") || {count:0};\nfor (let k of [\"temperature\",\"humidity\",\"pressure\"]) {\n  if (!Number.isFinite(Number(v[k]))) return null;\n}\ns.count++;\nfor (let k of [\"temperature\",\"humidity\",\"pressure\"]) {\n  let x=Number(v[k]);\n  let a=s[k] || {minimum:x,maximum:x,sum:0};\n  a.minimum=Math.min(a.minimum,x);a.maximum=Math.max(a.maximum,x);a.sum+=x;a.average=a.sum/s.count;s[k]=a;\n}\ncontext.set(\"statistics\",s);msg.payload=s;return msg;",
+    "outputs": 1,
+    "x": 390,
+    "y": 100,
+    "wires": [
+      [
+        "debug"
+      ]
+    ]
+  },
+  {
+    "id": "debug",
+    "type": "debug",
+    "z": "lab13",
+    "name": "MQTT temperature humidity pressure",
+    "active": true,
+    "tosidebar": true,
+    "complete": "payload",
+    "x": 680,
+    "y": 100,
+    "wires": []
+  }
+]
