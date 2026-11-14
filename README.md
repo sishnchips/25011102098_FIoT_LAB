@@ -1,6 +1,9 @@
 # 25011102098_FIoT_LAB
 
-Fundamentals of Internet of Things lab programs for registration number 25011102098. The task projects are organized from my saved lab files and the CAT papers. New missing-task code and repairs are identified in SUBMISSION_NOTES.md.
+Fundamentals of Internet of Things lab programs
+Name: Sishira A.V.
+Registration number: 25011102098. 
+The task projects are organized from my saved lab files and the CAT papers. New missing-task code and repairs are identified in SUBMISSION_NOTES.md.
 
 No hardware run or Keil build was made during this preparation. Eleven 8051 copies need a HEX build, CAT11 and selected UART projects need CubeMX, and CAT14/CAT15 assignment papers are absent. Existing HEX files were copied from the original CAT2 and CAT3 projects without a fresh build.
 
