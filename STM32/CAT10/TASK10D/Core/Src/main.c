@@ -62,7 +62,7 @@ static void MX_USART2_UART_Init(void);
 	uint16_t array_index;
 	uint8_t cmd1[] = "AT\r\n";
 	uint8_t cmd2[] = "AT+CWMODE=1\r\n";
-	uint8_t cmd3[] = "AT+CWJAP=\"SNUC\",\"snu12345\"\r\n";
+	uint8_t cmd3[] = "AT+CWJAP=\"YOUR_WIFI_SSID\",\"YOUR_WIFI_PASSWORD\"\r\n";
 	uint8_t cmd4[] = "AT+CIFSR\r\n";
 	uint8_t cmd5[] = "AT+CIPMUX=1\r\n";
 	uint8_t cmd6[] = "AT+CIPSERVER=1,80\r\n";

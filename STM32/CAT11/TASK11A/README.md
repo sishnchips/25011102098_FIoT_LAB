@@ -6,25 +6,25 @@ HARDWARE SETUP / PLATFORM: STM32F401RB development board (physical board unconfi
 TASK 11A : On-board LED Bring-Up
 
 1. Circuit Diagram
-Repeat the toggle after the missing output configuration is generated to demonstrate 11A with the shown signals.
+Repeat the toggle to demonstrate 11A with the shown signals.
 
 * Microcontroller / Board: STM32F401RB development board (physical board unconfirmed) + STM32F401RBT6.
-* GPIO / Peripheral pins: PA5 / GPIOA GPIO_PIN_5 -> LED + 330 ohm to GND [NEEDS CUBEMX].
-* Clock: IOC assigns HSE 25 MHz on PH0/PH1; application runs HSI 16 MHz PLL to 84 MHz.
-* External components / Peripheral: LED + 330 ohm to GND [NEEDS CUBEMX].
+* GPIO / Peripheral pins: PA5 / GPIOA GPIO_PIN_5 -> LED + 330 ohm to GND.
+* Clock: HSI 16 MHz PLL to 84 MHz.
+* External components / Peripheral: LED + 330 ohm to GND.
 * Power Supply: 3.3 V board logic, common ground; board regulator / USB supply.
 
 ![Circuit Diagram](circuit.png)
 
 2. Core Logic / Pseudocode / Code Base
-Working Principle: The prepared USER CODE toggles PA5 and waits five hundred milliseconds. The original F401 scaffold does not configure that LED pin, so the loop is ready for the listed CubeMX GPIO regeneration.
+Working Principle: The prepared USER CODE toggles PA5 and waits five hundred milliseconds. PA5 is now initialized as a push-pull output.
 
 Pseudocode:
 
 1. Initialize HAL and the original clock.
 2. Run the generated GPIO initialization.
 3. Toggle PA5 and wait half a second.
-4. Repeat the toggle after the missing output configuration is generated.
+4. Repeat the toggle.
 
 Code Base:
 The program is written in Embedded C using STM32 HAL (STM32CubeMX).
@@ -34,6 +34,6 @@ The program is written in Embedded C using STM32 HAL (STM32CubeMX).
 * `HAL_Delay()` waits for the programmed millisecond interval here.
 
 3. Inference
-PA5 is intended to blink after CubeMX configures it as an output. The current project is preparation for the hardware bring-up and cannot demonstrate the LED before that change.
+PA5 is configured as an output; target build and LED behavior remain to be tested.
 
-NEEDS CUBEMX: Confirm physical board MCU: own scaffold is STM32F401RBT6, paper names NUCLEO-F401RE. Select actual MCU/board in CubeMX (NUCLEO-F401RE if that is fitted), PA5 GPIO_Output push-pull/no pull/low speed initial LOW, PC13 GPIO_Input pull-up for B1 active LOW (B/C only), SYS Serial Wire, HSI16MHz PLL M=8 N=84 P=2 ->84MHz, APB1 /2 APB2 /1. Disable unused USART1 and unused external HSE pins if using HSI. MDK-ARM; Keep User Code.
+Configuration correction: PA5 push-pull output, initial LOW. The existing STM32F401RB target is retained until the actual board is confirmed; if using NUCLEO-F401RE, migrate the project to that target in CubeMX/Keil. No target build or hardware test performed.
