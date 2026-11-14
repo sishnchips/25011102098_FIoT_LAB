@@ -1,57 +1,40 @@
 EXPERIMENT DETAILS
-EXP: CONTINUOUS ASSESMENT 12
-DATE: 23/10/2026
-NAME OF EXP: Sensor Interfacing(BME280) – STM32(Debug) – ESP8266(Wi-Fi) HTTP – Node Analytics
-HARDWARE SETUP / PLATFORM: Blue Pill development board + STM32F103C8T6 + BME280 + ESP8266 + STM32CubeMX (MDK-ARM project)
-TASK 12B : Raw HTTP Response with BME280 Data
+EXP: CONTINUOUS ASSESSMENT 12
+DATE: 14/10/2026
+NAME OF EXP: STM32F401RE Cortex-M4: GPIO and User Input Programming
+HARDWARE SETUP / PLATFORM: STM32F401RB development board (physical board unconfirmed) + STM32F401RBT6 + GPIO LED and input + STM32CubeMX (MDK-ARM project)
+TASK 12B : On-board Switch Control with State Remembrance
 
 1. Circuit Diagram
-Read the sensor, build success or error JSON, send it and close the connection to demonstrate 12B with the shown signals.
+On release, toggle PA5 and preserve that output until the next event to demonstrate 12B with the shown signals.
 
-* Microcontroller / Board: Blue Pill development board + STM32F103C8T6.
-* GPIO / Peripheral pins: PB6 / I2C1_SCL -> BME280 SCL, 4.7k pull-up to 3.3V; PB7 / I2C1_SDA -> BME280 SDA, 4.7k pull-up to 3.3V; PA2 / USART2_TX -> ESP8266 / Wemos RX; PA3 / USART2_RX -> ESP8266 / Wemos TX.
-* Clock: HSE 8 MHz crystal on PD0-OSC_IN/PD1-OSC_OUT; PLL x9, SYSCLK 72 MHz.
-* External components / Peripheral: BME280 SCL, 4.7k pull-up to 3.3V; BME280 SDA, 4.7k pull-up to 3.3V; ESP8266 / Wemos RX; ESP8266 / Wemos TX.
+* Microcontroller / Board: STM32F401RB development board (physical board unconfirmed) + STM32F401RBT6.
+* GPIO / Peripheral pins: PC13 / GPIOC GPIO_PIN_13 -> B1 button to GND, pull-up; PA5 / GPIOA GPIO_PIN_5 -> LED + 330 ohm to GND.
+* Clock: HSI 16 MHz PLL to 84 MHz.
+* External components / Peripheral: B1 button to GND, pull-up; LED + 330 ohm to GND.
 * Power Supply: 3.3 V board logic, common ground; board regulator / USB supply.
 
 ![Circuit Diagram](circuit.png)
 
 2. Core Logic / Pseudocode / Code Base
-Working Principle: The original BME280 wrappers and HTTP response helper are used together in this copy. A complete link-zero request triggers a fresh read and a JSON response whose Content-Length comes from the actual JSON string.
+Working Principle: PC13 transitions are filtered with a twenty-millisecond tick comparison. A stable release toggles PA5 once and the output latch remembers the state, with both application GPIO settings now configured.
 
 Pseudocode:
 
-1. Initialize the sensor and the previously omitted USART2 initialization call.
-2. Send the saved ESP station and port-80 server commands.
-3. Wait for a complete link-zero HTTP header.
-4. Read the sensor, build success or error JSON, send it and close the connection.
+1. Read the intended PC13 button input.
+2. Track raw changes and accept a stable level after twenty milliseconds.
+3. Record the press timestamp.
+4. On release, toggle PA5 and preserve that output until the next event.
 
 Code Base:
 The program is written in Embedded C using STM32 HAL (STM32CubeMX).
 
 * `main.h` provides the project HAL declarations in this program.
-* `string.h` provides string length, comparison and buffer functions in this program.
-* `bme280.h` declares the Bosch sensor API in this program.
-* `stdio.h` provides the formatted text functions in this program.
-* `user_i2c_read()` adapts the Bosch read callback to HAL here.
-* `HAL_I2C_Mem_Read()` reads sensor registers through hi2c1 here.
-* `user_i2c_write()` adapts the Bosch write callback to HAL here.
-* `HAL_I2C_Mem_Write()` writes sensor registers through hi2c1 here.
-* `user_delay_us()` rounds the Bosch microsecond delay request up to a HAL millisecond wait here.
-* `HAL_Delay()` waits for the programmed millisecond interval here.
-* `clear_buffer()` clears the receive text and its index here.
-* `memset()` clears the selected byte buffer here.
-* `receive_response()` collects modem replies until the saved stop condition or timeout here.
-* `HAL_UART_Receive()` receives bytes with the requested timeout here.
-* `strstr()` finds the request or modem response marker here.
-* `send_http_response()` constructs and sends this task HTTP reply here.
-* `bme280_get_sensor_data()` obtains compensated sensor channel values here.
-* `snprintf()` formats text within a stated buffer size here.
-* `strlen()` counts actual string bytes for serial or HTTP length here.
-* `HAL_UART_Transmit()` sends bytes on the selected UART handle here.
-* `bme280_init()` reads sensor calibration through the supplied callbacks here.
-* `bme280_set_sensor_settings()` applies the saved oversampling and filter settings here.
-* `bme280_set_sensor_mode()` selects normal sensor operation here.
+* `HAL_GetTick()` returns the millisecond time used for event comparisons here.
+* `HAL_GPIO_ReadPin()` reads the application switch level here.
+* `HAL_GPIO_TogglePin()` changes the stored LED output state here.
 
 3. Inference
-A successful request returns live environmental readings, while a failed read returns an error message instead of stale success data. This joins compensated I2C sensing with an HTTP response over the ESP UART.
+The prepared loop gives one remembered LED change per completed press. The source demonstrates event state handling with GPIO configuration corrected; hardware testing remains pending.
+
+Configuration correction: PA5 push-pull output, initial LOW, PC13 input with pull-up (active LOW assumed). The existing STM32F401RB target is retained until the actual board is confirmed; if using NUCLEO-F401RE, migrate the project to that target in CubeMX/Keil. No target build or hardware test performed.

@@ -390,7 +390,7 @@
               <FileType>2</FileType>
               <FilePath>startup_stm32f103xb.s</FilePath>
             </File>
-          <File><FileName>ESPLib.c</FileName><FileType>1</FileType><FilePath>..\Core\Src\ESPLib.c</FilePath></File><File><FileName>bme280.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\bme280.h</FilePath></File><File><FileName>bme280_defs.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\bme280_defs.h</FilePath></File><File><FileName>ESPLib.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\ESPLib.h</FilePath></File><File><FileName>main.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\main.h</FilePath></File><File><FileName>stm32f1xx_hal_conf.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\stm32f1xx_hal_conf.h</FilePath></File><File><FileName>stm32f1xx_it.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\stm32f1xx_it.h</FilePath></File></Files>
+          <File><FileName>bme280.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\bme280.h</FilePath></File><File><FileName>bme280_defs.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\bme280_defs.h</FilePath></File><File><FileName>main.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\main.h</FilePath></File><File><FileName>stm32f1xx_hal_conf.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\stm32f1xx_hal_conf.h</FilePath></File><File><FileName>stm32f1xx_it.h</FileName><FileType>5</FileType><FilePath>..\Core\Inc\stm32f1xx_it.h</FilePath></File></Files>
         </Group>
         <Group>
           <GroupName>Application/User/Core</GroupName>

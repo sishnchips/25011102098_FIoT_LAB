@@ -1,5 +1,26 @@
-# STM32 CAT11
+\# STM32 CAT11
 
-- [TASK11A](TASK11A/README.md): On-board LED Bring-Up.
-- [TASK11B](TASK11B/README.md): On-board Switch Control with State Remembrance.
-- [TASK11C](TASK11C/README.md): Short-Press and Long-Press Detection.
+
+
+\## HTTP Server - STM32–Wemos Wi-Fi Modem Using AT Commands
+
+
+
+\- \[TASK11A](TASK11A/README.md): TCP Server Setup and IP Retrieval.
+
+\- \[TASK11B](TASK11B/README.md): Dynamic HTTP Webpage and Node-RED Integration.
+
+
+
+\## Hardware Platform
+
+
+
+\* STM32F103C8T6 Blue Pill development board.
+
+\* Wemos D1 Mini (ESP8266).
+
+\* USART2 communication at 115200 baud.
+
+\* STM32CubeMX and Keil MDK-ARM.
+

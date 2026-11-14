@@ -1,40 +1,49 @@
 EXPERIMENT DETAILS
-EXP: CONTINUOUS ASSESMENT 11
-DATE: 14/10/2026
-NAME OF EXP: STM32F401RE Cortex-M4: GPIO and User Input Programming
-HARDWARE SETUP / PLATFORM: STM32F401RB development board (physical board unconfirmed) + STM32F401RBT6 + GPIO LED and input + STM32CubeMX (MDK-ARM project)
-TASK 11B : On-board Switch Control with State Remembrance
+EXP: CONTINUOUS ASSESMENT 10
+DATE: 05/10/2026
+NAME OF EXP: STM32–Wemos Wi-Fi Modem Interface Using AT Commands
+HARDWARE SETUP / PLATFORM: Blue Pill development board + STM32F103C8T6 + ESP8266 + STM32CubeMX (MDK-ARM project)
+TASK 10D : HTTP server extension; separate task title not present in supplied paper
 
 1. Circuit Diagram
-On release, toggle PA5 and preserve that output until the next event to demonstrate 11B with the shown signals.
+Request CIPSEND, transmit the response and close link zero to demonstrate 10D with the shown signals.
 
-* Microcontroller / Board: STM32F401RB development board (physical board unconfirmed) + STM32F401RBT6.
-* GPIO / Peripheral pins: PC13 / GPIOC GPIO_PIN_13 -> B1 button to GND, pull-up; PA5 / GPIOA GPIO_PIN_5 -> LED + 330 ohm to GND.
-* Clock: HSI 16 MHz PLL to 84 MHz.
-* External components / Peripheral: B1 button to GND, pull-up; LED + 330 ohm to GND.
+* Microcontroller / Board: Blue Pill development board + STM32F103C8T6.
+* GPIO / Peripheral pins: PA2 / USART2_TX -> ESP8266 RX; PA3 / USART2_RX -> ESP8266 TX.
+* Clock: HSE 8 MHz crystal on PD0-OSC_IN/PD1-OSC_OUT; PLL x9, SYSCLK 72 MHz.
+* External components / Peripheral: ESP8266 RX; ESP8266 TX.
 * Power Supply: 3.3 V board logic, common ground; board regulator / USB supply.
 
 ![Circuit Diagram](circuit.png)
 
 2. Core Logic / Pseudocode / Code Base
-Working Principle: PC13 transitions are filtered with a twenty-millisecond tick comparison. A stable release toggles PA5 once and the output latch remembers the state, with both application GPIO settings now configured.
+Working Principle: The website code configures station mode, joins the saved network and starts a multi-connection server on port 80. It recognizes an IPD request for link zero and sends an HTML response with an increasing counter.
 
 Pseudocode:
 
-1. Read the intended PC13 button input.
-2. Track raw changes and accept a stable level after twenty milliseconds.
-3. Record the press timestamp.
-4. On release, toggle PA5 and preserve that output until the next event.
+1. Transmit the six saved setup commands and read their responses.
+2. Collect incoming UART bytes in rx_data.
+3. When link zero contains GET /, build the counter page and its HTTP headers.
+4. Request CIPSEND, transmit the response and close link zero.
 
 Code Base:
 The program is written in Embedded C using STM32 HAL (STM32CubeMX).
 
 * `main.h` provides the project HAL declarations in this program.
-* `HAL_GetTick()` returns the millisecond time used for event comparisons here.
-* `HAL_GPIO_ReadPin()` reads the application switch level here.
-* `HAL_GPIO_TogglePin()` changes the stored LED output state here.
+* `string.h` provides string length, comparison and buffer functions in this program.
+* `stdio.h` provides the formatted text functions in this program.
+* `clear_buffer()` clears the receive text and its index here.
+* `memset()` clears the selected byte buffer here.
+* `receive_response()` collects modem replies until the saved stop condition or timeout here.
+* `HAL_UART_Receive()` receives bytes with the requested timeout here.
+* `strstr()` finds the request or modem response marker here.
+* `send_http_response()` constructs and sends this task HTTP reply here.
+* `sprintf()` formats the saved response or command text here.
+* `strlen()` counts actual string bytes for serial or HTTP length here.
+* `HAL_UART_Transmit()` sends bytes on the selected UART handle here.
+* `HAL_Delay()` waits for the programmed millisecond interval here.
 
 3. Inference
-The prepared loop gives one remembered LED change per completed press. The source demonstrates event state handling with GPIO configuration corrected; hardware testing remains pending.
+Repeated requests to link zero receive increasing New num values when the modem is configured correctly. This is an HTTP extension found in the own source, and the IOC and MSP now agree with USART2. Target build and hardware testing remain pending.
 
-Configuration correction: PA5 push-pull output, initial LOW, PC13 input with pull-up (active LOW assumed). The existing STM32F401RB target is retained until the actual board is confirmed; if using NUCLEO-F401RE, migrate the project to that target in CubeMX/Keil. No target build or hardware test performed.
+Configuration correction: USART2 on PA2/PA3, 115200 baud, 8-N-1; HSE 8 MHz and 72 MHz system clock retained. Enter Wi-Fi credentials locally.

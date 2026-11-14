@@ -23,7 +23,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "bme280.h"
-#include "ESPLib.h"
 #include <stdio.h>
 /* USER CODE END Includes */
 
@@ -94,6 +93,158 @@ void user_delay_us(uint32_t period, void *intf_ptr) {
 }
 /* USER CODE END 4 */ 
 
+//Uart2
+	uint8_t rx_data[800];
+	uint8_t rx_char;
+	uint16_t array_index;
+	uint8_t cmd1[] = "AT\r\n";
+	uint8_t cmd2[] = "AT+CWMODE=1\r\n";
+	uint8_t cmd3[] = "AT+CWJAP=\"SNUC\",\"snu12345\"\r\n";
+	uint8_t cmd4[] = "AT+CIFSR\r\n";
+	uint8_t cmd5[] = "AT+CIPMUX=1\r\n";
+	uint8_t cmd6[] = "AT+CIPSERVER=1,80\r\n";
+	char response[300];
+	char cmd[50];
+	uint32_t counter = 0;
+	char body[150];
+
+	void clear_buffer(void)
+	{
+		memset(rx_data, 0, sizeof(rx_data));
+		array_index = 0;
+		}
+		void receive_response(void)
+		{
+			while (1)
+			{
+			if (HAL_UART_Receive(&huart2, &rx_char, 1, 20000) == HAL_OK)
+			{
+				if (array_index < 799)
+				{
+				rx_data[array_index] = rx_char;
+				array_index++;
+				rx_data[array_index] = '\0';
+				}
+
+				if (strstr((char *)rx_data, "OK") != NULL)
+				{
+				break;
+				}
+				if (strstr((char *)rx_data, "ERROR") != NULL ||
+				strstr((char *)rx_data, "FAIL") != NULL)
+				{
+				break;
+				}
+				if (strstr((char *)rx_data, "<") != NULL)
+				{
+				break;
+				}
+				}
+			else
+				{
+				break;
+				}
+	}
+	}
+
+	//browser display
+void send_http_response(void)
+{
+    char json[200];
+    char http_response[300];
+    char cmd[50];
+
+    // Read latest BME280 sensor data
+    rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, &dev);
+
+    if (rslt == BME280_OK)
+    {
+        temperature = comp_data.temperature;
+        humidity = comp_data.humidity;
+        pressure = comp_data.pressure / 100.0f;
+    }
+    else
+    {
+        // Do not send old sensor readings as successful data
+        strcpy(json, "{\"status\":\"error\",\"message\":\"Sensor read failed\"}");
+    }
+
+    // Construct dynamic JSON payload
+    if (rslt == BME280_OK)
+    {
+        snprintf(json, sizeof(json),
+                 "{\"status\":\"success\","
+                 "\"temperature\":%.2f,"
+                 "\"humidity\":%.2f,"
+                 "\"pressure\":%.2f}",
+                 temperature,
+                 humidity,
+                 pressure);
+    }
+
+    // Calculate JSON content length
+    int content_length = strlen(json);
+
+    // Construct complete HTTP response
+    snprintf(http_response, sizeof(http_response),
+             "HTTP/1.1 200 OK\r\n"
+             "Content-Type: application/json\r\n"
+             "Content-Length: %d\r\n"
+             "Connection: close\r\n"
+             "\r\n"
+             "%s",
+             content_length,
+             json);
+
+    // Calculate complete HTTP response length
+    int response_length = strlen(http_response);
+
+    // Send CIPSEND command for connection 0
+    snprintf(cmd, sizeof(cmd),
+             "AT+CIPSEND=0,%d\r\n",
+             response_length);
+
+    HAL_UART_Transmit(&huart2,
+                      (uint8_t *)cmd,
+                      strlen(cmd),
+                      1000);
+
+    // Wait for ESP8266 prompt '>'
+    uint8_t prompt_received = 0;
+
+    while (HAL_UART_Receive(&huart2, &rx_char, 1, 5000) == HAL_OK)
+    {
+        if (rx_char == '>')
+        {
+            prompt_received = 1;
+            break;
+        }
+    }
+
+    // Send HTTP response
+    if (prompt_received)
+    {
+        HAL_UART_Transmit(&huart2,
+                          (uint8_t *)http_response,
+                          response_length,
+                          5000);
+
+        receive_response();
+    }
+
+    // Close TCP connection
+    HAL_UART_Transmit(&huart2,
+                      (uint8_t *)"AT+CIPCLOSE=0\r\n",
+                      strlen("AT+CIPCLOSE=0\r\n"),
+                      1000);
+}
+
+//Uart2 ends
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+
 int main(void) {
  HAL_Init();
  SystemClock_Config();
@@ -127,20 +278,14 @@ settings.filter = BME280_FILTER_COEFF_OFF;
  // Set power mode to normal to enable continuous measurement cycles
 rslt = bme280_set_sensor_mode(BME280_POWERMODE_NORMAL, &dev);
  
-ESP8266_Init(StationMode,huart2);
-// 2. Connect to your local Wi-Fi network (Replace with your Router SSID and Password)
-ESP8266_wifiConnect("SNUC", "snu12345");
-// 3. Connect to your MQTT Broker (Replace with your Broker's IP Address)
-// 1883 is the standard unencrypted MQTT port
-ESP8266_portConnect("TCP", "broker.emqx.io", "1883");
-// 4. Configure the MQTT client connection parameters
-MQTT_InitTypeDef_t mqttSetting;
-mqttSetting.keepAlive = 500;
-mqttSetting.connectFlag = CleanSession;
-mqttSetting.clientID = "25011102098_sensor";
-// 5. Handshake with the MQTT broker
-MQTT_connectBroker(&mqttSetting);
-
+    HAL_Delay(2000);
+    clear_buffer();
+    HAL_UART_Transmit(&huart2,cmd1,strlen((char *)cmd1),HAL_MAX_DELAY); receive_response(); clear_buffer();
+    HAL_UART_Transmit(&huart2,cmd2,strlen((char *)cmd2),HAL_MAX_DELAY); receive_response(); clear_buffer();
+    HAL_UART_Transmit(&huart2,cmd3,strlen((char *)cmd3),HAL_MAX_DELAY); receive_response(); clear_buffer();
+    HAL_UART_Transmit(&huart2,cmd4,strlen((char *)cmd4),HAL_MAX_DELAY); receive_response(); clear_buffer();
+    HAL_UART_Transmit(&huart2,cmd5,strlen((char *)cmd5),HAL_MAX_DELAY); receive_response(); clear_buffer();
+    HAL_UART_Transmit(&huart2,cmd6,strlen((char *)cmd6),HAL_MAX_DELAY); receive_response(); clear_buffer();
 /* USER CODE END 2 */
  /* Infinite loop */
  /* USER CODE BEGIN WHILE */
@@ -148,18 +293,16 @@ MQTT_connectBroker(&mqttSetting);
   {
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
-    rslt = bme280_get_sensor_data(BME280_ALL,&comp_data,&dev);
-    if(rslt == BME280_OK){
-        temperature = comp_data.temperature;
-        pressure = comp_data.pressure / 100.0f;
-        humidity = comp_data.humidity;
+    if(HAL_UART_Receive(&huart2,&rx_char,1,HAL_MAX_DELAY) == HAL_OK){
+        if(array_index < sizeof(rx_data)-1){
+            rx_data[array_index++] = rx_char;
+            rx_data[array_index] = '\0';
+        }
+        if(strstr((char *)rx_data,"+IPD,0,") != NULL && strstr((char *)rx_data,"\r\n\r\n") != NULL){
+            send_http_response();
+            clear_buffer();
+        }
     }
-    if(rslt == BME280_OK){
-        char mqttData[160];
-        snprintf(mqttData,sizeof(mqttData),"{\"status\":\"success\",\"temperature\":%.2f,\"humidity\":%.2f,\"pressure\":%.2f}",temperature,humidity,pressure);
-        MQTT_publishTopic("stm32/data",mqttData,QoS0);
-    }
-    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }

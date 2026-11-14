@@ -1,31 +1,53 @@
 [
   {
-    "id": "lab13",
+    "id": "lab12",
     "type": "tab",
-    "label": "BME280 MQTT analytics"
+    "label": "BME280 HTTP statistics"
   },
   {
-    "id": "broker",
-    "type": "mqtt-broker",
-    "name": "Lab broker",
-    "broker": "broker.emqx.io",
-    "port": "1883",
-    "clientid": "25011102098_analytics",
-    "usetls": false,
-    "protocolVersion": "4",
-    "keepalive": "60",
-    "cleansession": true
+    "id": "poll",
+    "type": "inject",
+    "z": "lab12",
+    "name": "Read every 5 seconds",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "5",
+    "once": false,
+    "x": 130,
+    "y": 100,
+    "wires": [
+      [
+        "url"
+      ]
+    ]
   },
   {
-    "id": "mqtt",
-    "type": "mqtt in",
-    "z": "lab13",
-    "name": "Live BME280 JSON",
-    "topic": "stm32/data",
-    "qos": "0",
-    "datatype": "auto",
-    "broker": "broker",
-    "x": 160,
+    "id": "url",
+    "type": "function",
+    "z": "lab12",
+    "name": "Sensor URL from environment",
+    "func": "msg.url=env.get(\"SENSOR_HTTP_URL\"); if(!msg.url){node.error(\"Set SENSOR_HTTP_URL to the board HTTP endpoint\",msg);return null;} return msg;",
+    "outputs": 1,
+    "x": 390,
+    "y": 100,
+    "wires": [
+      [
+        "request"
+      ]
+    ]
+  },
+  {
+    "id": "request",
+    "type": "http request",
+    "z": "lab12",
+    "name": "Read live sensor JSON",
+    "method": "GET",
+    "ret": "obj",
+    "url": "",
+    "x": 640,
     "y": 100,
     "wires": [
       [
@@ -36,12 +58,12 @@
   {
     "id": "stats",
     "type": "function",
-    "z": "lab13",
-    "name": "Sensor statistics",
+    "z": "lab12",
+    "name": "Minimum maximum average",
     "func": "let v = typeof msg.payload === \"string\" ? JSON.parse(msg.payload) : msg.payload;\nif (v.status !== \"success\") return null;\nlet s = context.get(\"statistics\") || {count:0};\nfor (let k of [\"temperature\",\"humidity\",\"pressure\"]) {\n  if (!Number.isFinite(Number(v[k]))) return null;\n}\ns.count++;\nfor (let k of [\"temperature\",\"humidity\",\"pressure\"]) {\n  let x=Number(v[k]);\n  let a=s[k] || {minimum:x,maximum:x,sum:0};\n  a.minimum=Math.min(a.minimum,x);a.maximum=Math.max(a.maximum,x);a.sum+=x;a.average=a.sum/s.count;s[k]=a;\n}\ncontext.set(\"statistics\",s);msg.payload=s;return msg;",
     "outputs": 1,
-    "x": 390,
-    "y": 100,
+    "x": 400,
+    "y": 200,
     "wires": [
       [
         "debug"
@@ -51,13 +73,13 @@
   {
     "id": "debug",
     "type": "debug",
-    "z": "lab13",
-    "name": "MQTT temperature humidity pressure",
+    "z": "lab12",
+    "name": "Measured statistics",
     "active": true,
     "tosidebar": true,
     "complete": "payload",
     "x": 680,
-    "y": 100,
+    "y": 200,
     "wires": []
   }
 ]

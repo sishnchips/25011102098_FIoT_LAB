@@ -19,10 +19,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,25 +41,111 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint32_t changed = 0;
-uint32_t started = 0;
-uint32_t blink_tick = 0;
-GPIO_PinState raw = GPIO_PIN_SET;
-GPIO_PinState stable = GPIO_PIN_SET;
-uint8_t blinking = 0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+	uint8_t rx_data[800];
+	uint8_t rx_char;
+	uint16_t array_index;
+	uint8_t cmd1[] = "AT\r\n";
+	uint8_t cmd2[] = "AT+CWMODE=1\r\n";
+	uint8_t cmd3[] = "AT+CWJAP=\"YOUR_WIFI_SSID\",\"YOUR_WIFI_PASSWORD\"\r\n";
+	uint8_t cmd4[] = "AT+CIFSR\r\n";
+	uint8_t cmd5[] = "AT+CIPMUX=1\r\n";
+	uint8_t cmd6[] = "AT+CIPSERVER=1,80\r\n";
+	char response[300];
+	char cmd[50];
+	uint32_t counter = 0;
+	char body[150];
+
+	void clear_buffer(void)
+	{
+		memset(rx_data, 0, sizeof(rx_data));
+		array_index = 0;
+		}
+		void receive_response(void)
+		{
+			while (1)
+			{
+			if (HAL_UART_Receive(&huart2, &rx_char, 1, 20000) == HAL_OK)
+			{
+				if (array_index < 799)
+				{
+				rx_data[array_index] = rx_char;
+				array_index++;
+				rx_data[array_index] = '\0';
+				}
+
+				if (strstr((char *)rx_data, "OK") != NULL)
+				{
+				break;
+				}
+				if (strstr((char *)rx_data, "ERROR") != NULL ||
+				strstr((char *)rx_data, "FAIL") != NULL)
+				{
+				break;
+				}
+				if (strstr((char *)rx_data, "<") != NULL)
+				{
+				break;
+				}
+				}
+			else
+				{
+				break;
+				}
+	}
+	}
+
+void send_http_response(void)
+{
+    counter++;
+
+    sprintf(body,
+            "<html><body>"
+						"<h1>New num %lu</h1>"
+            "</body></html>",
+            (unsigned long)counter);
+
+    sprintf(response,
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/html\r\n"
+            "Content-Length: %d\r\n"
+            "Connection: close\r\n"
+            "\r\n"
+            "%s",
+            (int)strlen(body), body);
+
+    sprintf(cmd, "AT+CIPSEND=0,%d\r\n", (int)strlen(response));
+
+    HAL_UART_Transmit(&huart2, (uint8_t *)cmd, strlen(cmd), 1000);
+
+    while (HAL_UART_Receive(&huart2, &rx_char, 1, 5000) == HAL_OK)
+    {
+        if (rx_char == '>')
+            break;
+    }
+
+    HAL_UART_Transmit(&huart2, (uint8_t *)response, strlen(response), 5000);
+
+    receive_response();
+
+    HAL_UART_Transmit(&huart2, (uint8_t *)"AT+CIPCLOSE=0\r\n", 15, 1000);
+}
+
 
 /* USER CODE END 0 */
 
@@ -92,27 +178,59 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+	HAL_Delay(2000);
+	clear_buffer();
+	HAL_UART_Transmit(&huart2, cmd1, strlen((char *)cmd1), HAL_MAX_DELAY);
+	receive_response();
+	clear_buffer();
+	HAL_UART_Transmit(&huart2, cmd2, strlen((char *)cmd2), HAL_MAX_DELAY);
+	receive_response();
+	clear_buffer();
+	HAL_UART_Transmit(&huart2, cmd3, strlen((char *)cmd3), HAL_MAX_DELAY);
+	receive_response();
+	clear_buffer();
+	HAL_UART_Transmit(&huart2, cmd4, strlen((char *)cmd4), HAL_MAX_DELAY);
+	receive_response();
+	clear_buffer();
+	HAL_UART_Transmit(&huart2, cmd5, strlen((char *)cmd5), HAL_MAX_DELAY);
+	receive_response();
+	clear_buffer();
+	HAL_UART_Transmit(&huart2, cmd6, strlen((char *)cmd6), HAL_MAX_DELAY);
+	receive_response();
 
-/* USER CODE END 2 */
+  /* USER CODE END 2 */
+
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
     /* USER CODE END WHILE */
     /* USER CODE BEGIN 3 */
-        uint32_t now = HAL_GetTick();
-        GPIO_PinState value = HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13);
-        if(value != raw){ raw = value; changed = now; }
-        if(raw != stable && (uint32_t)(now - changed) >= 20){
-            stable = raw;
-            if(stable == GPIO_PIN_RESET) started = now;
-            else{ HAL_GPIO_TogglePin(GPIOA,GPIO_PIN_5); }
+
+		if (HAL_UART_Receive(&huart2, &rx_char, 1, HAL_MAX_DELAY) == HAL_OK)
+    {
+        if (array_index < sizeof(rx_data) - 1)
+        {
+            rx_data[array_index++] = rx_char;
+            rx_data[array_index] = '\0';
         }
 
+        if (strstr((char *)rx_data, "+IPD,0,") != NULL &&
+            strstr((char *)rx_data, "GET /") != NULL)
+        {
+            send_http_response();
+
+            clear_buffer();
+        }
+			}
+		
   }
   /* USER CODE END 3 */
 }
+
+
 
 /**
   * @brief System Clock Configuration
@@ -123,23 +241,16 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Configure the main internal regulator output voltage
-  */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
-
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 84;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -161,32 +272,52 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
   */
 static void MX_GPIO_Init(void)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
   /* USER CODE BEGIN MX_GPIO_Init_1 */
 
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
