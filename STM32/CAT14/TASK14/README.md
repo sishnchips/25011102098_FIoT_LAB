@@ -1,46 +1,86 @@
-EXPERIMENT DETAILS
-EXP: CONTINUOUS ASSESMENT 14
-DATE: 14/11/2026
-NAME OF EXP: CAT14 paper not supplied
-HARDWARE SETUP / PLATFORM: STM32F401RB development board (physical board unconfirmed) + STM32F401RBT6 + ESP8266 + STM32CubeMX (MDK-ARM project)
-TASK 14 : CAT14 requirements not supplied
+# TASK14 – MQTT Client Publishing & Node-RED Integration
 
-1. Circuit Diagram
-Publish the greeting every second after UART initialization to demonstrate 14 with the shown signals.
+## Experiment Details
 
-* Microcontroller / Board: STM32F401RB development board (physical board unconfirmed) + STM32F401RBT6.
-* GPIO / Peripheral pins: PA9 / USART1_TX -> ESP8266 RX; PA10 / USART1_RX -> ESP8266 TX.
-* Clock: HSI 16 MHz PLL to 84 MHz.
-* External components / Peripheral: ESP8266 RX; ESP8266 TX.
-* Power Supply: 3.3 V board logic, common ground; board regulator / USB supply.
+| Field | Details |
+|---|---|
+| Assessment | Continuous Assessment 14 |
+| MCU target | STM32F401RBT6 (ARM Cortex-M4) |
+| Wi-Fi module | ESP8266 |
+| Development tools | STM32CubeMX, Keil MDK-ARM |
+| Communication | USART1, TCP/IP, MQTT |
+
+## Aim
+
+Configure the STM32 and ESP8266 as an MQTT publisher to send a text message periodically to an MQTT broker and configure a Node-RED subscriber to receive it.
+
+## 1. Hardware Setup and Circuit Diagram
+
+| STM32 pin | ESP8266 connection |
+|---|---|
+| PA9 (USART1_TX) | RX |
+| PA10 (USART1_RX) | TX |
+| GND | GND |
+
+Use a suitable 3.3 V supply for the ESP8266 and a common ground. USART1 is configured for 115200 baud, 8 data bits, no parity and 1 stop bit. The project system clock is configured for 84 MHz.
 
 ![Circuit Diagram](circuit.png)
 
-2. Core Logic / Pseudocode / Code Base
-Working Principle: The candidate source connects an ESP library client and publishes Good Morning on stm32/data. The USART1 handle and startup initialization are now provided before ESP setup.
+## 2. Working Principle
 
-Pseudocode:
+The STM32 communicates with the ESP8266 using the ESP library. The firmware establishes a TCP connection to the MQTT broker, connects an MQTT client and publishes the message repeatedly.
 
-1. Initialize HAL, the stored clock and GPIO.
-2. Initialize USART1 and use huart1 for the saved ESP connection sequence.
-3. Connect the MQTT client to the broker stored in the source.
-4. Publish the greeting every second after the UART setup is supplied.
+| MQTT parameter | Value |
+|---|---|
+| Broker | broker.emqx.io |
+| Port | 1883 |
+| Topic | stm32/data |
+| Message | Good Morning |
+| QoS | 0 |
+| Delay between publish calls | 1000 ms |
 
-Code Base:
-The program is written in Embedded C using STM32 HAL (STM32CubeMX).
+Configure Wi-Fi credentials locally before running the project. The public broker and shared topic are intended for a demonstration; do not transmit private data.
 
-* `main.h` provides the project HAL declarations in this program.
-* `ESPLib.h` declares the own ESP and MQTT library interface in this program.
-* `ESP8266_Init()` tests and configures the ESP station interface here.
-* `ESP8266_wifiConnect()` sends the saved access-point connection settings here.
-* `ESP8266_portConnect()` opens the stored TCP broker connection here.
-* `MQTT_connectBroker()` sends the MQTT client connection packet here.
-* `MQTT_publishTopic()` sends the topic and application payload through the ESP library here.
-* `HAL_Delay()` waits for the programmed millisecond interval here.
+## 3. Pseudocode
 
-3. Inference
-This candidate is a greeting publisher, not verified CAT14 assignment evidence. The missing paper prevents title and scope verification, and target build and hardware communication remain unverified.
+1. Initialize HAL, system clock, GPIO and USART1.
+2. Initialize the ESP8266 in station mode.
+3. Connect to the configured Wi-Fi network.
+4. Open a TCP connection to the MQTT broker on port 1883.
+5. Configure the MQTT client and connect to the broker.
+6. Publish `Good Morning` to `stm32/data` with QoS 0.
+7. Wait 1000 ms and repeat.
 
-Configuration correction: USART1 PA9/PA10 at 115200 baud, 8-N-1, initialized before ESP8266_Init. Configure Wi-Fi credentials locally. Existing F401RB device target retained; confirm physical board and assignment scope.
+### Core Code
 
-Date note: no paper was available, so the date uses the original candidate lab file last-modified date. Experiment and task wording above report the absent requirements rather than invent a title.
+```c
+while (1)
+{
+    MQTT_publishTopic("stm32/data", "Good Morning", QoS0);
+    HAL_Delay(1000);
+}
+```
+
+## 4. Node-RED Subscriber Setup
+
+1. Add an MQTT In node and configure the server as `broker.emqx.io` with port `1883`.
+2. Set the subscription topic to `stm32/data` and QoS to 0.
+3. Connect the MQTT In node to a Debug node.
+4. Deploy the flow and observe the debug sidebar.
+
+Expected output after a successful connection: `Good Morning` approximately once per second. A dashboard text widget may also be connected to display the message.
+
+These are subscriber setup instructions; live Node-RED execution is not demonstrated by the files in this task.
+
+## 5. Inference
+
+MQTT enables lightweight publish-subscribe communication between embedded devices and applications such as Node-RED. The publisher sends messages to a broker without needing a direct connection to the subscriber. Successful reception depends on Wi-Fi connectivity, broker access and matching topic configuration.
+
+## Project Files
+
+- [Main firmware](Core/Src/main.c)
+- [ESP and MQTT library](Core/Src/ESPLib.c)
+- [Library header](Core/Inc/ESPLib.h)
+- [STM32CubeMX configuration](lab%2013.ioc)
+- [Keil project](MDK-ARM/lab%2013.uvprojx)
+- [Circuit diagram](circuit.png)
