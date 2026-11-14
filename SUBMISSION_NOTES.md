@@ -1,5 +1,19 @@
 # Submission preparation notes
 
+## Current verification status (14 November 2026)
+
+- Current repository tree contains 33 task folders as indexed in the root README; each has a task README, circuit image and Keil project. All 15 8051 tasks contain HEX files; correspondence to current source has not been verified.
+- CAT10D: USART2 PA2/PA3 configuration now agrees across main.c, MSP and IOC.
+- CAT11A/B/C: PA5 output initialized, PC13 pull-up input added for B/C, and IOC pin settings updated. Existing F401RB device targets retained pending physical board confirmation.
+- CAT14: USART1 handle and 115200 baud initialization added before ESP initialization, IOC updated; F401RB device retained. Assignment paper and scope remain unverified.
+- CAT15: replaced with Smart Dryer & Weather Monitoring System, including firmware, dashboard, flow JSON and images. Matching MQTT topic and credential placeholders verified.
+- CAT10D and CAT14 Wi-Fi credentials replaced with placeholders in current source. Previously published credentials may remain in Git history; rotate if applicable.
+- Target builds, CubeMX regeneration, hardware execution, image contents and full identity scan remain unverified. The ESP library runtime behavior has not been validated.
+
+## Historical preparation record
+
+The following records describe earlier preparation and are retained for provenance, not as a current checklist.
+
 Originals were read and copied; no commit or push was made. The reference was used for folder names and its raw .gitignore only; no reference README or application was copied.
 
 ## New code or missing task features
@@ -60,7 +74,7 @@ Originals were read and copied; no commit or push was made. The reference was us
 
 Exact before/after lines and project path changes are saved outside the repo in _submission_work/CODE_CHANGES.diff.
 
-## NEEDS CUBEMX
+## Historical CubeMX findings (see current status above)
 
 - STM32/CAT10/TASK10D: IOC specifies USART1 PA9/PA10 but generated application uses USART2 PA2/PA3. In CubeMX disable USART1; enable USART2 asynchronous 115200 baud, 8 data bits, no parity, 1 stop bit, TX/RX, PA2 TX/PA3 RX; retain HSE 8MHz PLL x9 SYSCLK72MHz APB1 36MHz. Regenerate MDK-ARM with Keep User Code.
 - STM32/CAT11/TASK11A: Confirm physical board MCU: own scaffold is STM32F401RBT6, paper names NUCLEO-F401RE. Select actual MCU/board in CubeMX (NUCLEO-F401RE if that is fitted), PA5 GPIO_Output push-pull/no pull/low speed initial LOW, PC13 GPIO_Input pull-up for B1 active LOW (B/C only), SYS Serial Wire, HSI16MHz PLL M=8 N=84 P=2 ->84MHz, APB1 /2 APB2 /1. Disable unused USART1 and unused external HSE pins if using HSI. MDK-ARM; Keep User Code.
@@ -78,6 +92,6 @@ Exact before/after lines and project path changes are saved outside the repo in 
 - CAT3 and CAT6 preserve polling logic despite interrupt wording in their papers.
 - Saved Wi-Fi network strings are from the original sources. Confirm them on the test network.
 
-## Validation limits
+## Historical validation limits
 
 All 79 STM32 Core source files passed native GCC syntax checking. ARM GCC and Keil C51 were unavailable; no ARM link, target build or hardware behavior was verified. The eleven changed/new 8051 task copies intentionally have no fabricated HEX.
