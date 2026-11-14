@@ -108,4 +108,4 @@ STM32/
 
 Experiment files have been reorganized and documented. Target compilation and hardware execution remain to be verified where applicable.
 
-Refer to [SUBMISSION_NOTES.md](SUBMISSION_NOTES.md) for preparation details and verification limitations.
+The current 8051 HEX files have not been verified against the latest source. CubeMX regeneration, official assignment numbering and requirements, and physical MCU compatibility remain to be confirmed. Live Node-RED integration and hardware behavior have not been independently verified.
