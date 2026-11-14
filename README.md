@@ -83,5 +83,5 @@ STM32/
 - [STM32/CAT11](STM32/CAT11/README.md): STM32F401RE Cortex-M4: GPIO and User Input Programming.
 - [STM32/CAT12](STM32/CAT12/README.md): Sensor Interfacing(BME280) – STM32(Debug) – ESP8266(Wi-Fi) HTTP – Node Analytics.
 - [STM32/CAT13](STM32/CAT13/README.md): Sensor Interfacing(BME280) – (MQTT) – Node Analytics.
-- [STM32/CAT14](STM32/CAT14/README.md): CAT14 paper not supplied.
-- [STM32/CAT15](STM32/CAT15/README.md): Smart Dryer & Weather Monitoring System (assignment paper not supplied).
+- [STM32/CAT14](STM32/CAT14/README.md): MQTT Client Publishing & Node-RED Integration.
+- [STM32/CAT15](STM32/CAT15/README.md): Smart Dryer & Weather Monitoring System.
