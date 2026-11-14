@@ -13,7 +13,7 @@ The task projects are organized from my saved lab files and the CAT papers. New 
 
 ## Verification & Preparation Notes
 
-No hardware run or Keil build was made during this preparation. Eleven 8051 copies need a HEX build, CAT11 and selected UART projects need CubeMX, and CAT14/CAT15 assignment papers are absent. Existing HEX files were copied from the original CAT2 and CAT3 projects without a fresh build.
+The current repository contains 33 task projects with README files, circuit images and Keil project files. All 15 8051 tasks have HEX files, but their correspondence to the latest source has not been established. CAT10D UART configuration, CAT11 GPIO setup and CAT14 UART initialization have been corrected in source and IOC files. CAT15 was replaced with the Smart Dryer & Weather Monitoring System. Target compilation, CubeMX regeneration and hardware testing remain unverified. Confirm the physical MCU for CAT11/CAT14 and the CAT14/CAT15 assignment scope against the original papers. See [SUBMISSION_NOTES.md](SUBMISSION_NOTES.md) for historical details and current limitations.
 
 ## Repository Structure
 
