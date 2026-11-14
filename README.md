@@ -1,13 +1,21 @@
 # 25011102098_FIoT_LAB
 
-Fundamentals of Internet of Things lab programs
-Name: Sishira A.V.
-Registration number: 25011102098. 
-The task projects are organized from my saved lab files and the CAT papers. New missing-task code and repairs are identified in SUBMISSION_NOTES.md.
+## Fundamentals of Internet of Things Lab
+
+| Field | Details |
+| --- | --- |
+| Student Name | Sishira A.V. |
+| Registration Number | 25011102098 |
+
+## Repository Overview
+
+The task projects are organized from my saved lab files and the CAT papers. New missing-task code and repairs are identified in [SUBMISSION_NOTES.md](SUBMISSION_NOTES.md).
+
+## Verification & Preparation Notes
 
 No hardware run or Keil build was made during this preparation. Eleven 8051 copies need a HEX build, CAT11 and selected UART projects need CubeMX, and CAT14/CAT15 assignment papers are absent. Existing HEX files were copied from the original CAT2 and CAT3 projects without a fresh build.
 
-## Structure
+## Repository Structure
 
 ```text
 8051/
@@ -61,7 +69,7 @@ STM32/
     TASK15/
 ```
 
-## CAT list
+## Continuous Assessment Index
 
 - [8051/CAT2](8051/CAT2/README.md): 8051 Tool Chain setup – Development Board – AT89S52.
 - [8051/CAT3](8051/CAT3/README.md): Timer-Based LED Pattern Generator and Button Interrupt Controller.
@@ -76,4 +84,4 @@ STM32/
 - [STM32/CAT12](STM32/CAT12/README.md): Sensor Interfacing(BME280) – STM32(Debug) – ESP8266(Wi-Fi) HTTP – Node Analytics.
 - [STM32/CAT13](STM32/CAT13/README.md): Sensor Interfacing(BME280) – (MQTT) – Node Analytics.
 - [STM32/CAT14](STM32/CAT14/README.md): CAT14 paper not supplied.
-- [STM32/CAT15](STM32/CAT15/README.md): CAT15 paper not supplied.
+- [STM32/CAT15](STM32/CAT15/README.md): Smart Dryer & Weather Monitoring System (assignment paper not supplied).
